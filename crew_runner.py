@@ -1,6 +1,7 @@
 import os
 import json
 import pandas as pd
+import time
 from crewai import Crew
 from dotenv import load_dotenv
 from agents import researcher, validator, reporter
@@ -44,6 +45,8 @@ def process_excel_batch(file_path='Test data.xlsx'):
             results.append(processed_result)
         except Exception as e:
             results.append({"Title": designation, "Company Name": company, "First Name": "", "Last Name": "", "Source": f"Error: {e}"})
+        
+        time.sleep(2) # Add a 2-second delay to avoid rate limiting
 
     with open('results.json', 'w') as f:
         json.dump(results, f, indent=4)
