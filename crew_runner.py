@@ -14,14 +14,35 @@ def run_crew_for_query(company, designation):
     validate_task = create_validate_task(company, designation)
     report_task = create_report_task(company, designation)
 
+    # Wire context: validator sees researcher output; reporter sees both
+    validate_task.context = [research_task]
+    report_task.context = [research_task, validate_task]
+
     crew = Crew(
         agents=[researcher, validator, reporter],
         tasks=[research_task, validate_task, report_task],
         verbose=True
     )
 
-    result = crew.kickoff().raw
-    return json.loads(result) 
+    raw = crew.kickoff().raw
+
+    # Strip markdown code fences if the LLM wraps the JSON
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.strip()
+
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        # Try to extract the first JSON object from the output
+        import re
+        match = re.search(r'\{.*?\}', raw, re.DOTALL)
+        if match:
+            return json.loads(match.group())
+        return {"firstName": "", "lastName": "", "source": f"Parse error: {raw[:200]}"}
 
 def process_excel_batch(file_path='Test data.xlsx'):
     df = pd.read_excel(file_path)
@@ -45,8 +66,8 @@ def process_excel_batch(file_path='Test data.xlsx'):
             results.append(processed_result)
         except Exception as e:
             results.append({"Title": designation, "Company Name": company, "First Name": "", "Last Name": "", "Source": f"Error: {e}"})
-        
-        time.sleep(2) # Add a 2-second delay to avoid rate limiting
+
+        time.sleep(10) # Add a 2-second delay to avoid rate limiting
 
     with open('results.json', 'w') as f:
         json.dump(results, f, indent=4)
@@ -54,12 +75,6 @@ def process_excel_batch(file_path='Test data.xlsx'):
     return results
 
 if __name__ == "__main__":
-    # Example single query
-    # example_company = "Facebook"
-    # example_designation = "CEO"
-    # print(f"Running example: {example_company} {example_designation}")
-    # result = run_crew_for_query(example_company, example_designation)
-    # print(json.dumps(result, indent=4))
     process_excel_batch()
 
 
