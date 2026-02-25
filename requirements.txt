@@ -1,0 +1,9 @@
+crewai
+langchain-groq
+crewai-tools
+streamlit
+python-dotenv
+pandas
+beautifulsoup4 
+playwright
+flask

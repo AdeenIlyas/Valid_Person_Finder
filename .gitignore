@@ -1,0 +1,27 @@
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Test data files
+Test data.xlsx
+*.xlsx
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Streamlit cache (if used)
+.streamlit/
+
+# Logs
+*.log
